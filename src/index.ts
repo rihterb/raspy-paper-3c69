@@ -10,6 +10,7 @@ export default {
     // Prepare the inputs for the AI model, including the dynamically received prompt
     const inputs = {
       prompt: prompt || "default prompt",  // Use the received prompt or a default one if not provided
+      guidance_scale: 7.5,
     };
 
     // Run the AI model with the given inputs
