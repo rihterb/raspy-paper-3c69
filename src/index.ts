@@ -5,7 +5,7 @@ export interface Env {
 export default {
   async fetch(request, env): Promise<Response> {
     try {
-      // Parse the incoming request for the prompt (e.g., translated text)
+      // Parse the incoming request to extract the prompt (which is dynamically passed)
       const { prompt } = await request.json();
 
       // Ensure we have a valid prompt
@@ -13,10 +13,10 @@ export default {
         return new Response("Invalid prompt received", { status: 400 });
       }
 
-      // Prepare the input for the AI model, including the translated prompt
+      // Prepare the input for the AI model, including the dynamically received prompt
       const inputs = {
-        prompt: prompt,  // The translated Ancient Greek text or whatever text you receive
-        guidance_scale: 7.5,  // Guidance parameter set to 7.5
+        prompt: prompt,  // The prompt from the incoming request
+        guidance_scale: 7.5,  // Optional: guidance parameter set to 7.5 for more control
       };
 
       // Run the AI model with the given inputs
@@ -25,10 +25,7 @@ export default {
         inputs
       );
 
-      // Log the response for debugging
-      console.log("AI Model Response:", response);
-
-      // Assuming the response contains image data as a base64-encoded string
+      // Assuming the response contains the image data as base64
       const imgBuffer = Buffer.from(response.image, 'base64');
 
       // Return the image in the response
