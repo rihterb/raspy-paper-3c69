@@ -4,41 +4,39 @@ export interface Env {
 
 export default {
   async fetch(request, env): Promise<Response> {
-
-    // Get the incoming request body
-    const requestBody = await request.json();
-    const { prompt } = requestBody;
-
-    // Check if a prompt is provided, if not return an error
-    if (!prompt) {
-      return new Response("No prompt provided", { status: 400 });
-    }
-
-    // Example of text parsing if you need to process the Ancient Greek text specifically (you can adjust this depending on the need)
-    const parsedPrompt = `Close-up view of an ancient stone tablet with Greek letters carved into it. The text on the tablet says: ${prompt}. The engraving should be realistic and historical, resembling a stone carving.`;
-
-    const inputs = {
-      prompt: parsedPrompt,
-      image: null,  // Here, you could attach an image URL or binary data if you're processing images
-      mask: null,   // If applicable, you could include a mask (for inpainting tasks)
-    };
-
     try {
-      // Run the AI model with the inputs
-      const response = await env.AI.run(
-        "@cf/runwayml/stable-diffusion-v1-5-inpainting",
-        inputs
-      );
+      // Parse the incoming request body for the prompt
+      const requestBody = await request.json();
+      const { prompt } = requestBody;
 
-      // Return the generated image as a PNG response
-      return new Response(response, {
+      // Check if a prompt is provided, return an error if not
+      if (!prompt) {
+        return new Response("No prompt provided", { status: 400 });
+      }
+
+      // Run the AI model with the prompt
+      const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
+        prompt: prompt, // Pass the provided prompt
+      });
+
+      // Ensure the response contains the image field
+      if (!response.image) {
+        return new Response("Image not generated", { status: 500 });
+      }
+
+      // Decode the base64 image string to binary
+      const binaryString = atob(response.image); 
+      const img = Uint8Array.from(binaryString, (m) => m.codePointAt(0));
+
+      // Return the image as a JPEG response
+      return new Response(img.buffer, {
         headers: {
-          "content-type": "image/png",
+          'Content-Type': 'image/jpeg', // Ensure the correct content type for JPEG
         },
       });
 
     } catch (error) {
-      console.error("Error in AI generation:", error);
+      console.error("Error generating image:", error);
       return new Response("Internal server error", { status: 500 });
     }
   },
