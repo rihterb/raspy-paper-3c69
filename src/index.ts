@@ -4,40 +4,27 @@ export interface Env {
 
 export default {
   async fetch(request, env): Promise<Response> {
-    try {
-      // Parse the incoming request body for the prompt
-      const requestBody = await request.json();
-      const { prompt } = requestBody;
 
-      // Check if a prompt is provided, return an error if not
-      if (!prompt) {
-        return new Response("No prompt provided", { status: 400 });
-      }
+    // Define the prompt and guidance parameter to generate the image
+    const inputs = {
+      prompt: "cyberpunk cat",
+      guidance_scale: 7.5,  // Add the guidance parameter with a value of 7.5
+    };
 
-      // Run the AI model with the prompt
-      const response = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', {
-        prompt: prompt, // Pass the provided prompt
-      });
+    // Run the AI model with the inputs
+    const response = await env.AI.run(
+      "@cf/lykon/dreamshaper-8-lcm",  // Specify the model
+      inputs
+    );
 
-      // Ensure the response contains the image field
-      if (!response.image) {
-        return new Response("Image not generated", { status: 500 });
-      }
+    // Assuming the response contains image data, return it as a JPEG
+    const imgBuffer = Buffer.from(response.image, 'base64');  // Convert base64 to buffer
 
-      // Decode the base64 image string to binary
-      const binaryString = atob(response.image); 
-      const img = Uint8Array.from(binaryString, (m) => m.codePointAt(0));
-
-      // Return the image as a JPEG response
-      return new Response(img.buffer, {
-        headers: {
-          'Content-Type': 'image/jpeg', // Ensure the correct content type for JPEG
-        },
-      });
-
-    } catch (error) {
-      console.error("Error generating image:", error);
-      return new Response("Internal server error", { status: 500 });
-    }
+    // Return the image in the response with the appropriate content type
+    return new Response(imgBuffer, {
+      headers: {
+        "content-type": "image/jpg",
+      },
+    });
   },
 } satisfies ExportedHandler<Env>;
