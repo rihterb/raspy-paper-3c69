@@ -24,7 +24,7 @@ export default {
 
       // Make the request to the AI model
       const response = await env.AI.run(
-        "@cf/stabilityai/stable-diffusion-xl-base-1.0",
+        "@cf/lykon/dreamshaper-8-lcm",
         inputs,
       );
 
